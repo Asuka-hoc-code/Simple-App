@@ -213,18 +213,119 @@ Người chơi điều khiển snake di chuyển trong không gian 2D để ăn 
 
 ## 9. 🔄 Use Cases
 
-### UC-01: Play Game
-1. User mở game  
-2. Nhấn WASD  
-3. Snake di chuyển  
-4. Ăn food → tăng điểm  
+---
+
+### UC-01: Start New Game
+
+#### Actor
+Player
+
+#### Description
+Người chơi khởi động trò chơi mới.
+
+#### Preconditions
+- Ứng dụng đã mở
+
+#### Main Flow
+1. User mở ứng dụng  
+2. Hệ thống khởi tạo snake  
+3. Hệ thống spawn food đầu tiên  
+4. Hiển thị màn hình game  
+
+#### Postconditions
+- Game ở trạng thái Playing
 
 ---
 
-### UC-02: Game Over
-1. Snake va chạm  
-2. Hiển thị kết quả  
-3. User nhấn R  
+### UC-02: Control Snake
+
+#### Actor
+Player
+
+#### Description
+Người chơi điều khiển hướng di chuyển của snake.
+
+#### Preconditions
+- Game đang ở trạng thái Playing
+
+#### Main Flow
+1. User nhấn phím WASD  
+2. Hệ thống nhận input  
+3. Snake đổi hướng di chuyển  
+
+#### Alternative Flow
+- Nếu hướng mới ngược 180° → hệ thống bỏ qua input
+
+#### Postconditions
+- Snake tiếp tục di chuyển theo hướng mới
+
+---
+
+### UC-03: Eat Food
+
+#### Actor
+Player
+
+#### Description
+Snake ăn food để tăng điểm và chiều dài.
+
+#### Preconditions
+- Snake chạm vào food
+
+#### Main Flow
+1. Snake chạm food  
+2. Food biến mất  
+3. Score tăng +1  
+4. Snake tăng chiều dài  
+5. Hệ thống spawn food mới  
+
+#### Postconditions
+- Điểm số được cập nhật
+
+---
+
+### UC-04: Handle Collision
+
+#### Actor
+System
+
+#### Description
+Hệ thống kiểm tra va chạm của snake.
+
+#### Preconditions
+- Game đang chạy
+
+#### Main Flow
+1. Snake va chạm tường hoặc thân  
+2. Hệ thống phát hiện collision  
+3. Game chuyển sang trạng thái Game Over  
+4. Hiển thị thông báo GAME OVER  
+
+#### Postconditions
+- Người chơi không thể điều khiển snake
+
+---
+
+### UC-05: Restart Game
+
+#### Actor
+Player
+
+#### Description
+Người chơi chơi lại sau khi thua.
+
+#### Preconditions
+- Game đang ở trạng thái Game Over
+
+#### Main Flow
+1. User nhấn phím R  
+2. Hệ thống reset score  
+3. Reset snake  
+4. Spawn food mới  
+5. Bắt đầu game mới  
+
+#### Postconditions
+- Game quay lại trạng thái Playing
 
 ---
 
