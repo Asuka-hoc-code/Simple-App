@@ -5,12 +5,23 @@
 
 ## 1. 📌 Executive Summary
 
-Snake Game là một ứng dụng desktop đơn giản được phát triển bằng Java Swing nhằm:
-- Cung cấp trải nghiệm giải trí nhẹ
-- Minh họa các khái niệm lập trình GUI, game loop, event handling
-- Là nền tảng mở rộng cho các tính năng game phức tạp hơn
+Snake Game là một ứng dụng desktop được phát triển bằng Java Swing nhằm:
+- Cung cấp trải nghiệm giải trí đơn giản
+- Minh họa các khái niệm lập trình GUI, game loop, event handling và MVC
+- Là nền tảng mở rộng cho các tính năng game nâng cao
 
-Ứng dụng hướng tới người dùng cá nhân, sinh viên hoặc người học lập trình.
+Hệ thống hướng tới người dùng cá nhân, sinh viên và người học lập trình Java.
+
+Phiên bản nâng cấp của game hỗ trợ thêm(so với snake game thông thường):
+- Pause game
+- Chọn độ khó
+- Leaderboard
+- Lưu điểm
+- Sound effect
+- Skin/theme
+- Tăng tốc độ theo thời gian
+- Wall mode
+- Obstacle mode
 
 ---
 
@@ -21,7 +32,9 @@ Snake Game là một ứng dụng desktop đơn giản được phát triển b�
 | BO1 | Xây dựng game Snake hoạt động ổn định | Không crash sau 1000 lượt chơi |
 | BO2 | Trải nghiệm mượt | FPS ≥ 50 |
 | BO3 | Dễ sử dụng | User có thể chơi mà không cần hướng dẫn |
-| BO4 | Dễ mở rộng | Code modular, thêm feature < 2h |
+| BO4 | Dễ mở rộng | Thêm feature mới < 2h |
+| BO5 | Tăng trải nghiệm gameplay | Hỗ trợ nhiều chế độ chơi |
+| BO6 | Tăng khả năng tương tác người dùng | Có leaderboard và save score |
 
 ---
 
@@ -29,18 +42,26 @@ Snake Game là một ứng dụng desktop đơn giản được phát triển b�
 
 ### 3.1 In Scope
 - Game Snake 2D chạy offline
-- Điều khiển bằng bàn phím (WASD)
-- Tính điểm (score)
-- Va chạm (tường, thân)
+- Điều khiển bằng bàn phím
+- Tính điểm
+- Collision detection
 - Restart game
-- Hiển thị trạng thái game
+- Pause game
+- Chọn độ khó
+- Save score
+- Leaderboard
+- Sound effect
+- Skin/theme
+- Dynamic speed
+- Wall mode
+- Obstacle mode
 
 ### 3.2 Out of Scope
-- Multiplayer
-- Online services / API
-- Save/load game
+- Multiplayer online
+- Cloud storage
 - AI opponent
-- Đồ họa nâng cao (OpenGL)
+- OpenGL graphics
+- Mobile version
 
 ---
 
@@ -49,8 +70,8 @@ Snake Game là một ứng dụng desktop đơn giản được phát triển b�
 | Stakeholder | Interest | Responsibility |
 |------------|---------|---------------|
 | End User | Chơi game | Sử dụng |
-| Developer | Code | Implement & maintain |
-| Tester | Chất lượng | Test & report bug |
+| Developer | Xây dựng hệ thống | Implement & maintain |
+| Tester | Kiểm thử | Report bug |
 | Instructor | Đánh giá | Review project |
 
 ---
@@ -58,13 +79,16 @@ Snake Game là một ứng dụng desktop đơn giản được phát triển b�
 ## 5. 🎮 Product Overview
 
 ### 5.1 Game Concept
-Người chơi điều khiển snake di chuyển trong không gian 2D để ăn food và tăng điểm, tránh va chạm.
+Người chơi điều khiển snake di chuyển trong không gian 2D để ăn food và tăng điểm, đồng thời tránh va chạm với tường, vật cản hoặc chính thân của snake.
 
 ### 5.2 Core Mechanics
-- Movement (grid-based)
+- Grid-based movement
 - Growth mechanic
 - Collision detection
-- Game loop (update/render)
+- Game loop
+- Dynamic speed
+- Obstacle system
+- State management
 
 ---
 
@@ -76,9 +100,9 @@ Người chơi điều khiển snake di chuyển trong không gian 2D để ăn 
 |----|------|
 | Description | Khởi tạo game |
 | Input | Mở ứng dụng |
-| Process | Tạo snake, spawn food |
+| Process | Tạo snake, food, map |
 | Output | Hiển thị màn hình game |
-| Acceptance Criteria | Snake hiển thị đúng vị trí |
+| Acceptance Criteria | Game khởi tạo đúng |
 
 ---
 
@@ -87,11 +111,11 @@ Người chơi điều khiển snake di chuyển trong không gian 2D để ăn 
 | ID | FR-02 |
 |----|------|
 | Description | Điều khiển snake |
-| Input | WASD |
+| Input | WASD / Arrow keys |
 | Process | Cập nhật hướng |
 | Output | Snake đổi hướng |
 | Rules | Không quay đầu |
-| Acceptance Criteria | Phím phản hồi < 50ms |
+| Acceptance Criteria | Input delay < 50ms |
 
 ---
 
@@ -102,7 +126,7 @@ Người chơi điều khiển snake di chuyển trong không gian 2D để ăn 
 | Description | Snake di chuyển |
 | Logic | Add head, remove tail |
 | Frequency | Theo timer |
-| Acceptance Criteria | Di chuyển mượt, không giật |
+| Acceptance Criteria | Di chuyển mượt |
 
 ---
 
@@ -112,8 +136,8 @@ Người chơi điều khiển snake di chuyển trong không gian 2D để ăn 
 |----|------|
 | Description | Ăn food |
 | Trigger | Head == Food |
-| Output | +1 score, tăng chiều dài |
-| Acceptance Criteria | Food spawn không trùng snake |
+| Output | +Score, tăng chiều dài |
+| Acceptance Criteria | Food không spawn trùng snake |
 
 ---
 
@@ -122,9 +146,9 @@ Người chơi điều khiển snake di chuyển trong không gian 2D để ăn 
 | ID | FR-05 |
 |----|------|
 | Description | Kiểm tra va chạm |
-| Cases | Wall, Self |
+| Cases | Wall, Self, Obstacle |
 | Output | Game Over |
-| Acceptance Criteria | Phát hiện chính xác 100% |
+| Acceptance Criteria | Chính xác 100% |
 
 ---
 
@@ -132,25 +156,68 @@ Người chơi điều khiển snake di chuyển trong không gian 2D để ăn 
 
 | ID | FR-06 |
 |----|------|
-| Description | Hiển thị điểm |
-| Update | Sau mỗi food |
-| Acceptance Criteria | Không sai lệch |
+| Description | Quản lý điểm |
+| Features | Current score, high score |
+| Acceptance Criteria | Điểm hiển thị chính xác |
 
 ---
 
-### 6.7 Game Over
+### 6.7 Pause System
 
 | ID | FR-07 |
 |----|------|
-| Description | Kết thúc game |
-| UI | Hiển thị GAME OVER |
-| Acceptance Criteria | Hiển thị trong < 100ms |
+| Description | Tạm dừng game |
+| Input | Phím P |
+| Output | Pause/Resume |
+| Acceptance Criteria | Dừng game ngay lập tức |
 
 ---
 
-### 6.8 Restart
+### 6.8 Difficulty Selection
 
 | ID | FR-08 |
+|----|------|
+| Description | Chọn độ khó |
+| Modes | Easy, Medium, Hard |
+| Output | Tốc độ thay đổi |
+| Acceptance Criteria | Game phản hồi đúng mode |
+
+---
+
+### 6.9 Save Score & Leaderboard
+
+| ID | FR-09 |
+|----|------|
+| Description | Lưu điểm |
+| Storage | File local |
+| Output | Hiển thị leaderboard |
+| Acceptance Criteria | Dữ liệu lưu đúng |
+
+---
+
+### 6.10 Sound System
+
+| ID | FR-10 |
+|----|------|
+| Description | Hiệu ứng âm thanh |
+| Cases | Eat food, game over |
+| Acceptance Criteria | Âm thanh phát đúng |
+
+---
+
+### 6.11 Skin/Theme
+
+| ID | FR-11 |
+|----|------|
+| Description | Đổi giao diện |
+| Options | Snake color, background |
+| Acceptance Criteria | Theme đổi realtime |
+
+---
+
+### 6.12 Restart Game
+
+| ID | FR-12 |
 |----|------|
 | Input | Phím R |
 | Output | Reset game |
@@ -161,27 +228,30 @@ Người chơi điều khiển snake di chuyển trong không gian 2D để ăn 
 ## 7. ⚙️ Non-Functional Requirements
 
 ### 7.1 Performance
-- FPS: ≥ 50
-- Input latency: < 50ms
-- Memory usage: < 100MB
+- FPS ≥ 50
+- Input latency < 50ms
+- Memory usage < 100MB
 
 ---
 
 ### 7.2 Reliability
-- Không crash trong runtime
+- Không crash runtime
 - Timer ổn định
+- Không mất dữ liệu score
 
 ---
 
 ### 7.3 Usability
+- Giao diện đơn giản
 - Không cần tutorial
-- Phím đơn giản
+- Dễ thao tác
 
 ---
 
 ### 7.4 Maintainability
-- Code theo MVC hoặc tách logic rõ ràng
-- Comment đầy đủ
+- Kiến trúc MVC
+- Modular code
+- Dễ mở rộng feature
 
 ---
 
@@ -197,15 +267,18 @@ Người chơi điều khiển snake di chuyển trong không gian 2D để ăn 
 
 | Element | Description |
 |--------|------------|
-| Background | Black |
-| Snake | Green |
+| Background | Black/theme |
+| Snake | Green/custom |
 | Food | Red |
 | Score | Top-left |
+| Leaderboard | Side panel/dialog |
 
 ---
 
 ### 8.2 States
+- Menu
 - Playing
+- Pause
 - Game Over
 - Restart
 
@@ -215,53 +288,55 @@ Người chơi điều khiển snake di chuyển trong không gian 2D để ăn 
 
 ---
 
-### UC-01: Start New Game
+### UC-01: Start & Configure Game
 
 #### Actor
 Player
 
 #### Description
-Người chơi khởi động trò chơi mới.
+Người chơi khởi động và cấu hình game trước khi chơi.
 
-#### Preconditions
-- Ứng dụng đã mở
+#### Includes
+- Initialize Snake
+- Spawn Food
+- Select Difficulty
+- Select Skin
+- Enable Sound
+- Start Game Loop
 
 #### Main Flow
-1. User mở ứng dụng  
-2. Hệ thống khởi tạo snake  
-3. Hệ thống spawn food đầu tiên  
-4. Hiển thị màn hình game  
-
-#### Postconditions
-- Game ở trạng thái Playing
+1. User mở game
+2. Chọn difficulty
+3. Chọn skin/theme
+4. Bật/tắt sound
+5. Hệ thống khởi tạo game
+6. Bắt đầu game loop
 
 ---
 
-### UC-02: Control Snake
+### UC-02: Control & Play Game
 
 #### Actor
 Player
 
 #### Description
-Người chơi điều khiển hướng di chuyển của snake.
+Người chơi điều khiển snake trong quá trình chơi.
 
-#### Preconditions
-- Game đang ở trạng thái Playing
+#### Includes
+- Control Snake
+- Pause Game
+- Resume Game
+- Dynamic Speed Increase
 
 #### Main Flow
-1. User nhấn phím WASD  
-2. Hệ thống nhận input  
-3. Snake đổi hướng di chuyển  
-
-#### Alternative Flow
-- Nếu hướng mới ngược 180° → hệ thống bỏ qua input
-
-#### Postconditions
-- Snake tiếp tục di chuyển theo hướng mới
+1. User điều khiển snake
+2. Snake di chuyển
+3. User có thể pause/resume
+4. Tốc độ tăng theo score
 
 ---
 
-### UC-03: Eat Food
+### UC-03: Collect Food & Update Score
 
 #### Actor
 Player
@@ -269,72 +344,76 @@ Player
 #### Description
 Snake ăn food để tăng điểm và chiều dài.
 
-#### Preconditions
-- Snake chạm vào food
+#### Includes
+- Eat Food
+- Update Score
+- Save High Score
+- Play Sound Effect
 
 #### Main Flow
-1. Snake chạm food  
-2. Food biến mất  
-3. Score tăng +1  
-4. Snake tăng chiều dài  
-5. Hệ thống spawn food mới  
-
-#### Postconditions
-- Điểm số được cập nhật
+1. Snake chạm food
+2. Score tăng
+3. Snake dài thêm
+4. Spawn food mới
+5. Phát sound effect
+6. Cập nhật leaderboard
 
 ---
 
-### UC-04: Handle Collision
+### UC-04: Handle Collision & Game Over
 
 #### Actor
 System
 
 #### Description
-Hệ thống kiểm tra va chạm của snake.
+Hệ thống xử lý va chạm và kết thúc game.
 
-#### Preconditions
-- Game đang chạy
+#### Includes
+- Detect Wall Collision
+- Detect Self Collision
+- Detect Obstacle Collision
+- Show Game Over
+- Save Final Score
 
 #### Main Flow
-1. Snake va chạm tường hoặc thân  
-2. Hệ thống phát hiện collision  
-3. Game chuyển sang trạng thái Game Over  
-4. Hiển thị thông báo GAME OVER  
-
-#### Postconditions
-- Người chơi không thể điều khiển snake
+1. Hệ thống kiểm tra collision
+2. Snake va chạm
+3. Hiển thị GAME OVER
+4. Lưu điểm cuối cùng
 
 ---
 
-### UC-05: Restart Game
+### UC-05: Restart & Change Mode
 
 #### Actor
 Player
 
 #### Description
-Người chơi chơi lại sau khi thua.
+Người chơi chơi lại hoặc thay đổi chế độ game.
 
-#### Preconditions
-- Game đang ở trạng thái Game Over
+#### Includes
+- Restart Game
+- Enable Wall Mode
+- Enable Obstacle Mode
+- Reset Score
+- Reset Snake
 
 #### Main Flow
-1. User nhấn phím R  
-2. Hệ thống reset score  
-3. Reset snake  
-4. Spawn food mới  
-5. Bắt đầu game mới  
-
-#### Postconditions
-- Game quay lại trạng thái Playing
+1. User nhấn Restart
+2. Chọn mode mới
+3. Hệ thống reset game
+4. Bắt đầu lượt chơi mới
 
 ---
 
 ## 10. 📊 Business Rules
 
 - BR1: Snake không quay đầu 180°
-- BR2: Food spawn trong grid
-- BR3: Score tăng 1 mỗi lần ăn
-- BR4: Game loop cố định
+- BR2: Food không spawn vào snake hoặc obstacle
+- BR3: Score tăng theo food
+- BR4: Dynamic speed tăng theo điểm
+- BR5: Leaderboard lưu top score
+- BR6: Pause dừng toàn bộ game loop
 
 ---
 
@@ -345,7 +424,10 @@ Người chơi chơi lại sau khi thua.
 | FR-02 | Input Handler |
 | FR-03 | Game Loop |
 | FR-05 | Collision Engine |
-| FR-06 | UI Renderer |
+| FR-06 | Score Manager |
+| FR-07 | Pause Controller |
+| FR-09 | Leaderboard Manager |
+| FR-10 | Sound Manager |
 
 ---
 
@@ -353,41 +435,45 @@ Người chơi chơi lại sau khi thua.
 
 | Risk | Impact | Solution |
 |------|--------|---------|
-| Input không nhận | High | Key Binding |
-| Lag | Medium | Optimize timer |
-| Bug logic | High | Unit test |
+| Input delay | High | Key Binding |
+| Lag khi speed tăng | Medium | Optimize loop |
+| File save lỗi | Medium | Backup score |
+| Collision bug | High | Unit test |
 
 ---
 
 ## 13. 🧪 Acceptance Criteria (Overall)
 
-- Game chạy ổn định 10 phút liên tục
+- Game hoạt động ổn định ≥ 10 phút
 - Không lỗi input
-- Score chính xác
-- Restart hoạt động
-- UI hiển thị đúng
+- Collision chính xác
+- Pause hoạt động đúng
+- Leaderboard lưu chính xác
+- Dynamic speed ổn định
+- Restart hoạt động hoàn toàn
 
 ---
 
 ## 14. 🚀 Future Enhancements
 
-- Dynamic speed
-- Sound effects
-- Pause system
-- Leaderboard
-- Skin/theme
+- Multiplayer
+- Online leaderboard
 - AI snake
+- Mobile version
+- Cloud save
+- Map editor
 
 ---
 
 ## 15. 📌 Conclusion
 
-Snake Game là một hệ thống nhỏ nhưng đầy đủ các thành phần:
+Snake Game là một hệ thống game desktop hoàn chỉnh với:
 - Input handling
 - Game loop
-- Rendering
+- Collision system
 - State management
+- Leaderboard
+- Dynamic gameplay
+- MVC architecture
 
-Phù hợp để học và mở rộng thành game hoàn chỉnh.
-
----
+Hệ thống phù hợp cho việc học phân tích thiết kế hệ thống, UML, MVC và phát triển game desktop bằng Java.
