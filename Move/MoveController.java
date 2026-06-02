@@ -2,14 +2,11 @@ package move;
 
 import startgame.GameEngine;
 
-import java.awt.*;
+import java.awt.Point;
 
 public class MoveController {
 
-    private MovementValidator validator =
-            new MovementValidator();
-
-    private GameEngine engine;
+    private final GameEngine engine;
 
     public MoveController(GameEngine engine) {
         this.engine = engine;
@@ -17,24 +14,21 @@ public class MoveController {
 
     public void moveSnake() {
 
-        if (validator.isIdle(engine.dx, engine.dy)) {
+        if (engine.getDx() == 0
+                && engine.getDy() == 0) {
             return;
         }
 
         Point head =
-                engine.snake.get(0);
+                engine.getSnake().getFirst();
 
         Point newHead =
-                validator.computeNewHead(
-                        head,
-                        engine.dx,
-                        engine.dy
+                new Point(
+                        head.x + engine.getDx(),
+                        head.y + engine.getDy()
                 );
 
-        engine.snake.add(0, newHead);
-
-        engine.snake.remove(
-                engine.snake.size() - 1
-        );
+        engine.getSnake().addFirst(newHead);
+        engine.getSnake().removeLast();
     }
 }
