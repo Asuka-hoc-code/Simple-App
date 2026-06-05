@@ -93,21 +93,21 @@ class EatFoodTest {
         engine.foods.add(new Point(5, 5));
 
         int oldLength = engine.player1.body.size();
-        int oldScore = engine.player1.score;
+        int oldScore = engine.scoreManager.getScore(engine.player1);
 
         EatFoodService service = new EatFoodService();
 
         boolean result =
                 service.handleEat(
                         engine.player1,
-                        engine
+                        engine, engine.scoreManager
                 );
 
         assertTrue(result);
 
         assertEquals(
                 oldScore + 1,
-                engine.player1.score
+                engine.scoreManager.getScore(engine.player1)
         );
 
         assertEquals(
@@ -140,21 +140,22 @@ class EatFoodTest {
         engine.foods.add(new Point(20, 20));
 
         int oldLength = engine.player1.body.size();
-        int oldScore = engine.player1.score;
+        int oldScore = engine.scoreManager.getScore(engine.player1);
 
         EatFoodService service = new EatFoodService();
 
         boolean result =
                 service.handleEat(
                         engine.player1,
-                        engine
+                        engine,
+                        engine.scoreManager
                 );
 
         assertFalse(result);
 
         assertEquals(
                 oldScore,
-                engine.player1.score
+                engine.scoreManager.getScore(engine.player1)
         );
 
         assertEquals(
@@ -235,7 +236,7 @@ class EatFoodTest {
 
             service.handleEat(
                     engine.player1,
-                    engine
+                    engine, engine.scoreManager
             );
         }
 
@@ -249,5 +250,199 @@ class EatFoodTest {
         );
 
         assertTrue(elapsedMs < 5000);
+    }
+    /**
+     * =====================================================
+     * TEST SCORE MANAGER:
+     * Init Player
+     * =====================================================
+     *
+     * Kiểm tra:
+     * - Người chơi mới được khởi tạo điểm = 0.
+     */
+    @Test
+    @DisplayName("ScoreManager - Khởi tạo điểm số")
+    void testInitPlayerScore() {
+
+        GameEngine engine = new GameEngine();
+        engine.init();
+
+        assertEquals(
+                0,
+                engine.scoreManager.getScore(
+                        engine.player1
+                )
+        );
+    }
+    /**
+     * =====================================================
+     * TEST SCORE MANAGER:
+     * Add Score
+     * =====================================================
+     *
+     * Kiểm tra:
+     * - addScore() tăng đúng 1 điểm.
+     */
+    @Test
+    @DisplayName("ScoreManager - Tăng điểm")
+    void testAddScore() {
+
+        GameEngine engine = new GameEngine();
+        engine.init();
+
+        engine.scoreManager.addScore(
+                engine.player1
+        );
+
+        assertEquals(
+                1,
+                engine.scoreManager.getScore(
+                        engine.player1
+                )
+        );
+    }
+    /**
+     * =====================================================
+     * TEST SCORE MANAGER:
+     * Add Score Multiple Times
+     * =====================================================
+     *
+     * Kiểm tra:
+     * - Điểm được cộng dồn chính xác.
+     */
+    @Test
+    @DisplayName("ScoreManager - Cộng dồn điểm")
+    void testAddScoreMultipleTimes() {
+
+        GameEngine engine = new GameEngine();
+        engine.init();
+
+        for (int i = 0; i < 10; i++) {
+
+            engine.scoreManager.addScore(
+                    engine.player1
+            );
+        }
+
+        assertEquals(
+                10,
+                engine.scoreManager.getScore(
+                        engine.player1
+                )
+        );
+    }
+    /**
+     * =====================================================
+     * TEST SCORE MANAGER:
+     * Reset Score
+     * =====================================================
+     *
+     * Kiểm tra:
+     * - reset() đưa điểm về 0.
+     */
+    @Test
+    @DisplayName("ScoreManager - Reset điểm")
+    void testResetScore() {
+
+        GameEngine engine = new GameEngine();
+        engine.init();
+
+        engine.scoreManager.addScore(
+                engine.player1
+        );
+
+        engine.scoreManager.addScore(
+                engine.player1
+        );
+
+        engine.scoreManager.reset(
+                engine.player1
+        );
+
+        assertEquals(
+                0,
+                engine.scoreManager.getScore(
+                        engine.player1
+                )
+        );
+    }
+    /**
+     * =====================================================
+     * TEST SCORE MANAGER:
+     * Multiplayer Score
+     * =====================================================
+     *
+     * Kiểm tra:
+     * - Điểm số 2 người chơi độc lập.
+     */
+    @Test
+    @DisplayName("ScoreManager - Điểm số Multiplayer độc lập")
+    void testMultiplayerScore() {
+
+        GameEngine engine = new GameEngine();
+
+        engine.multiplayer = true;
+        engine.init();
+
+        engine.scoreManager.addScore(
+                engine.player1
+        );
+
+        engine.scoreManager.addScore(
+                engine.player1
+        );
+
+        engine.scoreManager.addScore(
+                engine.player2
+        );
+
+        assertEquals(
+                2,
+                engine.scoreManager.getScore(
+                        engine.player1
+                )
+        );
+
+        assertEquals(
+                1,
+                engine.scoreManager.getScore(
+                        engine.player2
+                )
+        );
+    }
+    /**
+     * =====================================================
+     * PERFORMANCE TEST:
+     * ScoreManager.addScore()
+     * =====================================================
+     *
+     * Thực hiện cộng điểm 100.000 lần.
+     */
+    @Test
+    @DisplayName("Performance - Add score 100000 times")
+    void testAddScorePerformance() {
+
+        GameEngine engine = new GameEngine();
+        engine.init();
+
+        long start = System.nanoTime();
+
+        for (int i = 0; i < 100_000; i++) {
+
+            engine.scoreManager.addScore(
+                    engine.player1
+            );
+        }
+
+        long end = System.nanoTime();
+
+        long elapsedMs =
+                (end - start) / 1_000_000;
+
+        System.out.println(
+                STR."AddScore 100000 times = \{elapsedMs} ms"
+        );
+
+        assertTrue(elapsedMs < 1000);
     }
 }

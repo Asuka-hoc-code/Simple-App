@@ -95,7 +95,7 @@ public class TestEatFood {
         engine.foods.add(new Point(5, 5));
 
         System.out.println("----- BEFORE EAT -----");
-        System.out.println(STR."Score  : \{engine.player1.score}");
+        System.out.println(STR."Score  : \{engine.scoreManager.getScore(engine.player1)}");
         System.out.println(STR."Length : \{engine.player1.body.size()}");
         System.out.println(STR."Food   : \{engine.foods.get(0)}");
 
@@ -104,12 +104,12 @@ public class TestEatFood {
         boolean result =
                 service.handleEat(
                         engine.player1,
-                        engine
+                        engine, engine.scoreManager
                 );
 
         System.out.println("\n----- AFTER EAT -----");
         System.out.println(STR."Result : \{result}");
-        System.out.println(STR."Score  : \{engine.player1.score}");
+        System.out.println(STR."Score  : \{engine.scoreManager.getScore(engine.player1)}");
         System.out.println(STR."Length : \{engine.player1.body.size()}");
         System.out.println(STR."Food   : \{engine.foods.get(0)}");
     }

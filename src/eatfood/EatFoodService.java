@@ -43,7 +43,8 @@ public class EatFoodService {
      */
     public boolean handleEat(
             PlayerSnake snake,
-            GameEngine engine
+            GameEngine engine,
+            ScoreManager scoreManager
     ) {
 
         // Lấy vị trí đầu rắn (phần tử đầu tiên trong danh sách body)
@@ -68,7 +69,7 @@ public class EatFoodService {
                 snake.body.add(new Point(tail));
 
                 // Tăng điểm số người chơi
-                snake.score++;
+                scoreManager.addScore(snake);
 
                 // Sinh lại thức ăn mới tại vị trí ngẫu nhiên
                 engine.foods.set(
