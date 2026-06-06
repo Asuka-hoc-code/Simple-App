@@ -4,6 +4,7 @@ import startgame.GameEngine;
 
 import java.awt.Point;
 
+/*
 public class MoveController {
 
     private final GameEngine engine;
@@ -32,3 +33,4 @@ public class MoveController {
         engine.getSnake().removeLast();
     }
 }
+*/
