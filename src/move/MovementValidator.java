@@ -2,7 +2,6 @@ package move;
 
 import java.awt.*;
 
-/*
 public class MovementValidator {
 
     public boolean isIdle(int dx, int dy) {
@@ -24,4 +23,3 @@ public class MovementValidator {
         return newHead;
     }
 }
-*/
