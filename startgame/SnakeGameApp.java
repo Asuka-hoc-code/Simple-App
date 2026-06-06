@@ -4,10 +4,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
+import configuregame.ConfigureGameUI;
 import move.*;
 import eatfood.*;
 import handlecollision.*;
 import restart.*;
+import sound.SoundManager;
 
 public class SnakeGameApp extends JPanel implements ActionListener {
 
@@ -15,23 +17,16 @@ public class SnakeGameApp extends JPanel implements ActionListener {
     public static final int HEIGHT = 600;
     public static final int UNIT_SIZE = 25;
 
-    private static final Font SCORE_FONT =
-            new Font("Arial", Font.BOLD, 20);
-
-    private static final Font GAME_OVER_FONT =
-            new Font("Arial", Font.BOLD, 40);
-
-    private static final Font INFO_FONT =
-            new Font("Arial", Font.PLAIN, 20);
-
-    private static final Color SNAKE_BODY_COLOR =
-            new Color(45, 180, 0);
-
+    
+    // ENGINE
+    
     private final GameEngine engine;
+    private boolean gameOverPlayed = false;
+    
+    // CONTROLLERS / SERVICES
+    
 
     private final JFrame parentFrame;
-
-    private final GameController gameController;
 
     private final BackToMenuService backToMenuService;
 
@@ -45,10 +40,15 @@ public class SnakeGameApp extends JPanel implements ActionListener {
 
     private final DirectionManager directionManager;
 
-    private final FoodManager foodManager;
-
+    private final SoundManager soundManager;
+    
+    // TIMER
+    
     private final Timer timer;
 
+    
+    // CONSTRUCTOR
+    
     public SnakeGameApp(
             GameEngine engine,
             JFrame parentFrame
@@ -62,12 +62,14 @@ public class SnakeGameApp extends JPanel implements ActionListener {
                 new Dimension(WIDTH, HEIGHT)
         );
 
-        setBackground(Color.BLACK);
+        setBackground(new Color(23, 22, 22));
 
         setFocusable(true);
 
-        gameController =
-                new GameController(engine);
+        // =====================
+        // INIT SERVICES
+        // =====================
+
 
         backToMenuService =
                 new BackToMenuService();
@@ -86,62 +88,107 @@ public class SnakeGameApp extends JPanel implements ActionListener {
 
         directionManager =
                 new DirectionManager();
-
-        foodManager =
-                new FoodManager();
-
-        engine.food =
-                foodManager.spawnFood();
-
-        timer =
-                new Timer(engine.delay, this);
+        soundManager =
+                new SoundManager();
+        // =====================
+        // TIMER
+        // =====================
+        timer = new Timer(
+                engine.delay,
+                this
+        );
 
         setupKeys();
 
         updateGameSpeed();
-
+        if (engine.musicEnabled) {
+            String musicPath = getMusicPath(engine.backgroundMusic);
+            soundManager.playBackgroundMusic(musicPath);
+        }
         timer.start();
     }
 
+    private String getMusicPath(String music) {
+
+        return switch (music) {
+            case "Background 1" -> "/sound/background1.wav";
+            case "Background 2" -> "/sound/background2.wav";
+            case "Background 3" -> "/sound/background3.wav";
+            default -> "/sound/background1.wav";
+        };
+    }
+
+    
+    // GAME LOOP
+    
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        updateGame();
+        if (engine.running) {
+
+            // =====================
+            // MOVE PLAYER 1
+            // =====================
+            moveController.moveSnake(
+                    engine.player1
+            );
+
+            boolean ateFoodP1 =
+                    eatFoodService.handleEat(
+                            engine.player1,
+                            engine,
+                            engine.scoreManager
+                    );
+            if (ateFoodP1 && engine.soundEnabled) {
+                soundManager.playSound("/sound/eatFoodSFX.wav");
+            }
+
+            // =====================
+            // MOVE PLAYER 2
+            // =====================
+            if (engine.multiplayer) {
+
+                moveController.moveSnake(
+                        engine.player2
+                );
+
+                boolean ateFoodP2 = eatFoodService.handleEat(
+                        engine.player2,
+                        engine, engine.scoreManager
+                );
+                if (ateFoodP2 && engine.soundEnabled) {
+                    soundManager.playSound("/sound/eatfood.wav");
+                }
+            }
+
+            // =====================
+            // COLLISION
+            // =====================
+            collisionService.check(engine);
+
+            if (!engine.running && !gameOverPlayed) {
+
+                gameOverPlayed = true;
+
+                timer.stop();
+
+                if (engine.soundEnabled) {
+
+                    soundManager.stopBackgroundMusic();
+
+                    soundManager.playSound(
+                            "/sound/gameoverSFX.wav"
+                    );
+                }
+            }
+        }
 
         repaint();
     }
 
-    private void updateGame() {
-
-        if (!engine.running) {
-            return;
-        }
-
-        moveController.moveSnake();
-
-        eatFoodService.handleEat(engine);
-
-        handleFoodState();
-
-        collisionService.check(engine);
-
-        if (!engine.running) {
-
-            timer.stop();
-        }
-    }
-
-    private void handleFoodState() {
-
-        if (engine.foodEaten) {
-
-            engine.food =
-                    foodManager.spawnFood();
-
-            engine.foodEaten = false;
-        }
-    }
-
+    
+    // RENDER
+    
     @Override
     protected void paintComponent(Graphics g) {
 
@@ -151,7 +198,18 @@ public class SnakeGameApp extends JPanel implements ActionListener {
 
             drawFood(g);
 
-            drawSnake(g);
+            drawSnake(
+                    g,
+                    engine.player1
+            );
+
+            if (engine.multiplayer) {
+
+                drawSnake(
+                        g,
+                        engine.player2
+                );
+            }
 
             drawScore(g);
 
@@ -161,26 +219,48 @@ public class SnakeGameApp extends JPanel implements ActionListener {
         }
     }
 
+    
+    // DRAW FOOD
+    
     private void drawFood(Graphics g) {
 
         g.setColor(Color.RED);
 
-        g.fillOval(
-                engine.food.x * UNIT_SIZE,
-                engine.food.y * UNIT_SIZE,
-                UNIT_SIZE,
-                UNIT_SIZE
-        );
+        for (Point food : engine.foods) {
+
+            g.fillOval(
+                    food.x * UNIT_SIZE,
+                    food.y * UNIT_SIZE,
+                    UNIT_SIZE,
+                    UNIT_SIZE
+            );
+        }
     }
 
-    private void drawSnake(Graphics g) {
+    
+    // DRAW SNAKE
+    
+    private void drawSnake(
+            Graphics g,
+            PlayerSnake snake
+    ) {
 
-        for (int i = 0; i < engine.snake.size(); i++) {
+        for (int i = 0; i < snake.body.size(); i++) {
 
-            Point p =
-                    engine.snake.get(i);
+            if (i == 0) {
 
-            setSnakeSkinColor(g, i);
+                g.setColor(
+                        snake.headColor
+                );
+
+            } else {
+
+                g.setColor(
+                        snake.bodyColor
+                );
+            }
+
+            Point p = snake.body.get(i);
 
             g.fillRect(
                     p.x * UNIT_SIZE,
@@ -191,87 +271,157 @@ public class SnakeGameApp extends JPanel implements ActionListener {
         }
     }
 
-    private void setSnakeSkinColor(
-            Graphics g,
-            int index
-    ) {
-
-        switch (engine.skin) {
-
-            case "Blue Snake":
-
-                g.setColor(
-                        index == 0
-                                ? Color.CYAN
-                                : Color.BLUE
-                );
-                break;
-
-            case "White Snake":
-
-                g.setColor(
-                        index == 0
-                                ? Color.WHITE
-                                : Color.LIGHT_GRAY
-                );
-                break;
-
-            default:
-
-                g.setColor(
-                        index == 0
-                                ? Color.GREEN
-                                : SNAKE_BODY_COLOR
-                );
-        }
-    }
-
+    
+    // SCORE
+    
     private void drawScore(Graphics g) {
 
         g.setColor(Color.WHITE);
 
-        g.setFont(SCORE_FONT);
-
-        g.drawString(
-                "Score: " + engine.score,
-                10,
-                20
+        g.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        20
+                )
         );
+
+        if (!engine.multiplayer) {
+
+            g.drawString(
+                    STR."Score: \{engine.scoreManager.getScore(
+                            engine.player1
+                    )}",
+                    10,
+                    20
+            );
+
+        } else {
+
+            g.drawString(
+                    STR."P1: \{engine.scoreManager.getScore(engine.player1)}",
+                    10,
+                    20
+            );
+
+            g.drawString(
+                    STR."P2: \{engine.scoreManager.getScore(engine.player2)}",
+                    500,
+                    20
+            );
+        }
     }
 
+    
+    // GAME OVER
+    
     private void drawGameOver(Graphics g) {
 
         g.setColor(Color.RED);
 
-        g.setFont(GAME_OVER_FONT);
+        if (!engine.multiplayer) {
+            g.setFont(
+                    new Font(
+                            "Arial",
+                            Font.BOLD,
+                            40
+                    )
+            );
+            g.drawString(
+                    "GAME OVER",
+                    WIDTH / 2 - 125,
+                    HEIGHT / 2
+            );
+            g.setFont(
+                    new Font(
+                            "Arial",
+                            Font.PLAIN,
+                            20
+                    )
+            );
+            g.drawString(
+                    STR."Score: \{engine.scoreManager.getScore(engine.player1)}",
+                    WIDTH / 2 - 50,
+                    HEIGHT / 2 + 50
+            );
 
-        g.drawString(
-                "GAME OVER",
-                WIDTH / 2 - 125,
-                HEIGHT / 2
-        );
+        } else {
+            g.setColor(new Color(41, 164, 10));
+            g.setFont(
+                    new Font(
+                            "Arial",
+                            Font.BOLD,
+                            40
+                    )
+            );
+            String winner;
+            if (engine.scoreManager.getScore(engine.player1) >
+                    engine.scoreManager.getScore(engine.player2)) {
 
-        g.setFont(INFO_FONT);
+                winner = "PLAYER 1 WIN!";
 
-        g.drawString(
-                "Score: " + engine.score,
-                WIDTH / 2 - 40,
-                HEIGHT / 2 + 40
-        );
+            } else if (
+                    engine.scoreManager.getScore(engine.player2) >
+                            engine.scoreManager.getScore(engine.player1)
+            ) {
+
+                winner = "PLAYER 2 WIN!";
+
+            } else {
+
+                winner = "DRAW!";
+            }
+            if("DRAW!".equals(winner)) {
+                g.drawString(
+                        winner,
+                        WIDTH / 2 - 50,
+                        HEIGHT / 2 + 50
+                );
+            }else{
+                g.drawString(
+                        winner,
+                        WIDTH / 2 - 130,
+                        HEIGHT / 2 + 50
+                );
+            }
+
+            g.setFont(
+                    new Font(
+                            "Arial",
+                            Font.PLAIN,
+                            20
+                    )
+            );
+
+            g.drawString(
+                    STR."Player 1: \{engine.scoreManager.getScore(engine.player1)}",
+                    WIDTH / 2 - 120,
+                    HEIGHT / 2 + 80
+            );
+
+            g.drawString(
+                    STR."Player 2: \{engine.scoreManager.getScore(engine.player2)}",
+                    WIDTH / 2 - 120,
+                    HEIGHT / 2 + 110
+            );
+        }
 
         g.drawString(
                 "Press R to Restart",
                 WIDTH / 2 - 90,
-                HEIGHT / 2 + 80
+                HEIGHT / 2 + 150
         );
 
         g.drawString(
                 "Backspace: Back To Menu",
                 WIDTH / 2 - 120,
-                HEIGHT / 2 + 100
+                HEIGHT / 2 + 180
         );
     }
 
+    
+    // INPUT
+    
     private void setupKeys() {
 
         InputMap im =
@@ -282,6 +432,9 @@ public class SnakeGameApp extends JPanel implements ActionListener {
         ActionMap am =
                 getActionMap();
 
+        // =====================
+        // PLAYER 1
+        // =====================
         im.put(
                 KeyStroke.getKeyStroke("W"),
                 "up"
@@ -302,6 +455,49 @@ public class SnakeGameApp extends JPanel implements ActionListener {
                 "right"
         );
 
+        // =====================
+        // PLAYER 2
+        // =====================
+        im.put(
+                KeyStroke.getKeyStroke(
+                        KeyEvent.VK_UP,
+                        0
+                ),
+                "p2up"
+        );
+
+        im.put(
+                KeyStroke.getKeyStroke(
+                        KeyEvent.VK_DOWN,
+                        0
+                ),
+                "p2down"
+        );
+
+        im.put(
+                KeyStroke.getKeyStroke(
+                        KeyEvent.VK_LEFT,
+                        0
+                ),
+                "p2left"
+        );
+
+        im.put(
+                KeyStroke.getKeyStroke(
+                        KeyEvent.VK_RIGHT,
+                        0
+                ),
+                "p2right"
+        );
+
+        // =====================
+        // SYSTEM
+        // =====================
+        im.put(
+                KeyStroke.getKeyStroke("R"),
+                "restart"
+        );
+
         im.put(
                 KeyStroke.getKeyStroke(
                         KeyEvent.VK_BACK_SPACE,
@@ -310,147 +506,221 @@ public class SnakeGameApp extends JPanel implements ActionListener {
                 "backMenu"
         );
 
-        im.put(
-                KeyStroke.getKeyStroke("R"),
-                "restart"
-        );
-
+        // =====================
+        // PLAYER 1 ACTIONS
+        // =====================
         am.put("up", new AbstractAction() {
-
             @Override
-            public void actionPerformed(
-                    ActionEvent e
-            ) {
+            public void actionPerformed(ActionEvent e) {
 
-                changeDirection(
+                if (directionManager.isValidChange(
+                        engine.player1.dx,
+                        engine.player1.dy,
                         0,
                         -1
-                );
+                )) {
+
+                    engine.player1.dx = 0;
+                    engine.player1.dy = -1;
+                }
             }
         });
 
         am.put("down", new AbstractAction() {
-
             @Override
-            public void actionPerformed(
-                    ActionEvent e
-            ) {
+            public void actionPerformed(ActionEvent e) {
 
-                changeDirection(
+                if (directionManager.isValidChange(
+                        engine.player1.dx,
+                        engine.player1.dy,
                         0,
                         1
-                );
+                )) {
+
+                    engine.player1.dx = 0;
+                    engine.player1.dy = 1;
+                }
             }
         });
 
         am.put("left", new AbstractAction() {
-
             @Override
-            public void actionPerformed(
-                    ActionEvent e
-            ) {
+            public void actionPerformed(ActionEvent e) {
 
-                changeDirection(
+                if (directionManager.isValidChange(
+                        engine.player1.dx,
+                        engine.player1.dy,
                         -1,
                         0
-                );
+                )) {
+
+                    engine.player1.dx = -1;
+                    engine.player1.dy = 0;
+                }
             }
         });
 
         am.put("right", new AbstractAction() {
-
             @Override
-            public void actionPerformed(
-                    ActionEvent e
-            ) {
+            public void actionPerformed(ActionEvent e) {
 
-                changeDirection(
+                if (directionManager.isValidChange(
+                        engine.player1.dx,
+                        engine.player1.dy,
                         1,
                         0
-                );
+                )) {
+
+                    engine.player1.dx = 1;
+                    engine.player1.dy = 0;
+                }
             }
         });
 
+        // =====================
+        // PLAYER 2 ACTIONS
+        // =====================
+        am.put("p2up", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                if (!engine.multiplayer) {
+                    return;
+                }
+
+                if (directionManager.isValidChange(
+                        engine.player2.dx,
+                        engine.player2.dy,
+                        0,
+                        -1
+                )) {
+
+                    engine.player2.dx = 0;
+                    engine.player2.dy = -1;
+                }
+            }
+        });
+
+        am.put("p2down", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                if (!engine.multiplayer) {
+                    return;
+                }
+
+                if (directionManager.isValidChange(
+                        engine.player2.dx,
+                        engine.player2.dy,
+                        0,
+                        1
+                )) {
+
+                    engine.player2.dx = 0;
+                    engine.player2.dy = 1;
+                }
+            }
+        });
+
+        am.put("p2left", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                if (!engine.multiplayer) {
+                    return;
+                }
+
+                if (directionManager.isValidChange(
+                        engine.player2.dx,
+                        engine.player2.dy,
+                        -1,
+                        0
+                )) {
+
+                    engine.player2.dx = -1;
+                    engine.player2.dy = 0;
+                }
+            }
+        });
+
+        am.put("p2right", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                if (!engine.multiplayer) {
+                    return;
+                }
+
+                if (directionManager.isValidChange(
+                        engine.player2.dx,
+                        engine.player2.dy,
+                        1,
+                        0
+                )) {
+
+                    engine.player2.dx = 1;
+                    engine.player2.dy = 0;
+                }
+            }
+        });
+
+        // =====================
+        // RESTART
+        // =====================
         am.put("restart", new AbstractAction() {
-
             @Override
-            public void actionPerformed(
-                    ActionEvent e
-            ) {
+            public void actionPerformed(ActionEvent e) {
 
-                restartGame();
+                restartService.restart(engine);
+                if (engine.musicEnabled) {
+
+                    soundManager.playBackgroundMusic(
+                            getMusicPath(
+                                    engine.backgroundMusic
+                            )
+                    );
+                }
+                timer.start();
+                gameOverPlayed = false;
+                repaint();
             }
         });
 
+        // =====================
+        // BACK TO MENU
+        // =====================
         am.put("backMenu", new AbstractAction() {
-
             @Override
-            public void actionPerformed(
-                    ActionEvent e
-            ) {
+            public void actionPerformed(ActionEvent e) {
 
                 timer.stop();
-
+                soundManager.stopBackgroundMusic();
                 backToMenuService.backToMenu(
-                        parentFrame,
-                        gameController
+                        parentFrame
                 );
             }
         });
     }
 
-    private void changeDirection(
-            int newDx,
-            int newDy
-    ) {
-
-        if (directionManager.isValidChange(
-                engine.dx,
-                engine.dy,
-                newDx,
-                newDy
-        )) {
-
-            engine.dx = newDx;
-
-            engine.dy = newDy;
-        }
-    }
-
-    private void restartGame() {
-
-        restartService.restart(engine);
-
-        engine.food =
-                foodManager.spawnFood();
-
-        timer.restart();
-
-        repaint();
-    }
-
+    
+    // GAME SPEED
+    
     public void updateGameSpeed() {
+
         timer.setDelay(engine.delay);
-        timer.setInitialDelay(
-                engine.delay
-        );
+
+        timer.setInitialDelay(engine.delay);
     }
-    public static void main(
-            String[] args
-    ) {
+
+    
+    // MAIN
+    
+    public static void main(String[] args) {
 
         SwingUtilities.invokeLater(() -> {
-
-            GameEngine engine =
-                    new GameEngine();
-
-            GameController controller =
-                    new GameController(engine);
-
-            MenuUI menu =
-                    new MenuUI(controller);
-
+            ConfigureGameUI menu = new ConfigureGameUI();
             menu.setVisible(true);
         });
     }
 }
+
