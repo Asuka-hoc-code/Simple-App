@@ -17,14 +17,14 @@ public class SnakeGameApp extends JPanel implements ActionListener {
     public static final int HEIGHT = 600;
     public static final int UNIT_SIZE = 25;
 
-    // =========================
+    
     // ENGINE
-    // =========================
+    
     private final GameEngine engine;
     private boolean gameOverPlayed = false;
-    // =========================
+    
     // CONTROLLERS / SERVICES
-    // =========================
+    
 
     private final JFrame parentFrame;
 
@@ -41,14 +41,14 @@ public class SnakeGameApp extends JPanel implements ActionListener {
     private final DirectionManager directionManager;
 
     private final SoundManager soundManager;
-    // =========================
+    
     // TIMER
-    // =========================
+    
     private final Timer timer;
 
-    // =========================
+    
     // CONSTRUCTOR
-    // =========================
+    
     public SnakeGameApp(
             GameEngine engine,
             JFrame parentFrame
@@ -118,9 +118,9 @@ public class SnakeGameApp extends JPanel implements ActionListener {
         };
     }
 
-    // =========================
+    
     // GAME LOOP
-    // =========================
+    
     @Override
     public void actionPerformed(ActionEvent e) {
 
@@ -186,9 +186,9 @@ public class SnakeGameApp extends JPanel implements ActionListener {
         repaint();
     }
 
-    // =========================
+    
     // RENDER
-    // =========================
+    
     @Override
     protected void paintComponent(Graphics g) {
 
@@ -219,9 +219,9 @@ public class SnakeGameApp extends JPanel implements ActionListener {
         }
     }
 
-    // =========================
+    
     // DRAW FOOD
-    // =========================
+    
     private void drawFood(Graphics g) {
 
         g.setColor(Color.RED);
@@ -237,9 +237,9 @@ public class SnakeGameApp extends JPanel implements ActionListener {
         }
     }
 
-    // =========================
+    
     // DRAW SNAKE
-    // =========================
+    
     private void drawSnake(
             Graphics g,
             PlayerSnake snake
@@ -271,9 +271,9 @@ public class SnakeGameApp extends JPanel implements ActionListener {
         }
     }
 
-    // =========================
+    
     // SCORE
-    // =========================
+    
     private void drawScore(Graphics g) {
 
         g.setColor(Color.WHITE);
@@ -312,9 +312,9 @@ public class SnakeGameApp extends JPanel implements ActionListener {
         }
     }
 
-    // =========================
+    
     // GAME OVER
-    // =========================
+    
     private void drawGameOver(Graphics g) {
 
         g.setColor(Color.RED);
@@ -419,9 +419,9 @@ public class SnakeGameApp extends JPanel implements ActionListener {
         );
     }
 
-    // =========================
+    
     // INPUT
-    // =========================
+    
     private void setupKeys() {
 
         InputMap im =
@@ -702,9 +702,9 @@ public class SnakeGameApp extends JPanel implements ActionListener {
         });
     }
 
-    // =========================
+    
     // GAME SPEED
-    // =========================
+    
     public void updateGameSpeed() {
 
         timer.setDelay(engine.delay);
@@ -712,9 +712,9 @@ public class SnakeGameApp extends JPanel implements ActionListener {
         timer.setInitialDelay(engine.delay);
     }
 
-    // =========================
+    
     // MAIN
-    // =========================
+    
     public static void main(String[] args) {
 
         SwingUtilities.invokeLater(() -> {
